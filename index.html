@@ -1,355 +1,1202 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spin Wheel Kelas</title>
-<style>
-*{box-sizing:border-box}
-body{
-  margin:0;min-height:100vh;padding:24px;
-  font-family:Arial,Helvetica,sans-serif;
-  background:linear-gradient(135deg,#eef4ff,#fdf6ff);color:#1f2937;
-}
-.container{
-  width:min(1100px,100%);margin:auto;
-  display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start;
-}
-.card{
-  background:#fff;border-radius:22px;padding:24px;
-  box-shadow:0 10px 35px rgba(31,41,55,.12);
-}
-h1{margin:0 0 6px;text-align:center;font-size:30px}
-.subtitle{text-align:center;color:#64748b;margin:0 0 18px}
-.wheel-wrap{position:relative;width:min(620px,90vw);aspect-ratio:1;margin:auto}
-canvas{width:100%;height:100%;display:block;transition:transform 0s}
-.pointer{
-  position:absolute;top:-2px;left:50%;transform:translateX(-50%);
-  width:0;height:0;border-left:18px solid transparent;
-  border-right:18px solid transparent;border-top:34px solid #ef4444;
-  filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));z-index:3;
-}
-.spin-btn{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:112px;height:112px;border-radius:50%;border:7px solid #fff;
-  background:#2563eb;color:#fff;font-size:21px;font-weight:800;
-  cursor:pointer;box-shadow:0 5px 18px rgba(37,99,235,.4);z-index:4;
-}
-.spin-btn:hover{background:#1d4ed8}
-.spin-btn:disabled{background:#94a3b8;cursor:not-allowed;box-shadow:none}
-.result{
-  margin-top:18px;text-align:center;min-height:60px;padding:14px;
-  border-radius:14px;background:#eff6ff;font-size:22px;
-  font-weight:800;color:#1d4ed8;
-}
-label{font-weight:700;display:block;margin-bottom:8px}
-textarea{
-  width:100%;min-height:300px;resize:vertical;padding:12px;
-  border:1px solid #d1d5db;border-radius:12px;font-size:15px;
-  line-height:1.6;outline:none;
-}
-textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
-button.small{
-  border:0;border-radius:10px;padding:10px 14px;font-weight:700;
-  cursor:pointer;background:#e5e7eb;color:#111827;margin-top:10px;
-}
-button.small.primary{background:#2563eb;color:#fff}
-.status{font-size:13px;color:#475569;margin-top:12px;min-height:18px}
-.count{
-  margin-top:10px;font-size:13px;color:#64748b;text-align:right;
-}
-@media(max-width:850px){
-  .container{grid-template-columns:1fr}
-  .wheel-wrap{width:min(600px,92vw)}
-}
-</style>
-</head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roda Undian Kelas</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    }
 
-<body>
-<div class="container">
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<section class="card">
-  <h1>🎡 Spin Wheel</h1>
-  <p class="subtitle">Putar untuk menentukan nama secara acak.</p>
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-  <div class="wheel-wrap">
-    <div class="pointer"></div>
-    <canvas id="wheel" width="700" height="700"></canvas>
-    <button id="spinBtn" class="spin-btn">SPIN</button>
-  </div>
+    /* Header */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-  <div id="result" class="result">Siap untuk diputar!</div>
-</section>
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
 
-<aside class="card">
-  <label for="names">Daftar Nama</label>
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
 
-  <textarea id="names" placeholder="Masukkan satu nama setiap baris"></textarea>
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
 
-  <button id="updateBtn" class="small primary">Perbarui Roda</button>
-  <button id="resetBtn" class="small">Reset</button>
+    .btn-outline {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
 
-  <div id="count" class="count"></div>
-  <div id="status" class="status"></div>
-</aside>
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
 
-</div>
+    .btn-outline.active {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: var(--primary);
+    }
 
-<script>
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const namesInput = document.getElementById("names");
-const spinBtn = document.getElementById("spinBtn");
-const updateBtn = document.getElementById("updateBtn");
-const resetBtn = document.getElementById("resetBtn");
-const result = document.getElementById("result");
-const statusEl = document.getElementById("status");
-const countEl = document.getElementById("count");
+    /* Main Layout */
+    main {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.85fr;
+      gap: 28px;
+      align-items: start;
+      transition: all 0.25s ease;
+    }
 
-let names = [];
-let currentRotation = 0;
-let spinning = false;
+    body.projector-mode main {
+      grid-template-columns: 1fr;
+      max-width: 900px;
+    }
 
-const colors = [
-  "#2563eb","#dc2626","#16a34a","#f59e0b","#7c3aed",
-  "#0891b2","#db2777","#65a30d","#ea580c","#4f46e5"
-];
+    body.projector-mode .side-panel {
+      display: none;
+    }
 
-/*
-  FORMAT INPUT:
-  Nama biasa:
-  Kelompok 1
+    /* Wheel Section */
+    .wheel-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
 
-  Nama prioritas:
-  Kelompok 2,
+    .wheel-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 470px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0 24px;
+      transition: max-width 0.25s ease;
+    }
 
-  Koma hanya berfungsi sebagai tanda prioritas.
-  Setelah dibaca, koma langsung dihapus dari tampilan input.
-*/
+    body.projector-mode .wheel-wrapper {
+      max-width: 560px;
+    }
 
-function parseInput(){
-  const lines = namesInput.value.split(/\r?\n/);
-  const parsed = [];
+    canvas#wheelCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 12px 20px rgba(15, 23, 42, 0.12));
+    }
 
-  for(const line of lines){
-    const raw = line.trim();
-    if(!raw) continue;
+    /* Pointer on the right (0 radians) */
+    .pointer {
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right: 34px solid #ef4444;
+      filter: drop-shadow(-3px 3px 4px rgba(0, 0, 0, 0.2));
+      z-index: 5;
+    }
 
-    const priority = /,\s*$/.test(raw);
-    const text = raw.replace(/,\s*$/,"").trim();
+    .pointer::after {
+      content: '';
+      position: absolute;
+      right: -36px;
+      top: -6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+    }
 
-    if(text){
-      parsed.push({text, priority:false});
-      if(priority && !parsed.some(x=>x.priority)){
-        parsed[parsed.length-1].priority = true;
+    /* Center Spin Hub */
+    .spin-hub {
+      position: absolute;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 5px solid #1e293b;
+      color: #1e293b;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, background 0.15s ease;
+      z-index: 4;
+      user-select: none;
+    }
+
+    .spin-hub:hover:not(:disabled) {
+      transform: scale(1.06);
+      background: #f8fafc;
+    }
+
+    .spin-hub:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .spin-hub:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-spin-main {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 14px 36px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+      transition: all 0.15s ease;
+    }
+
+    .btn-spin-main:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.38);
+    }
+
+    .btn-spin-main:disabled {
+      background: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Side Panel */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text);
+    }
+
+    .badge-count {
+      background: #eff6ff;
+      color: var(--primary);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    /* Input Area (Separate from List) */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease;
+      background: #f8fafc;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 76px;
+      line-height: 1.45;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .bulk-toggle {
+      font-size: 0.82rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 600;
+      padding: 2px 0;
+      width: fit-content;
+    }
+
+    .bulk-toggle:hover {
+      text-decoration: underline;
+    }
+
+    /* Active List (Editable) */
+    .list-toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-sm:hover {
+      background: #f1f5f9;
+    }
+
+    .btn-sm.danger {
+      color: var(--danger);
+    }
+
+    .btn-sm.danger:hover {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .participant-list {
+      list-style: none;
+      max-height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .participant-item:hover {
+      background: #f1f5f9;
+    }
+
+    .participant-item.editing {
+      background: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .participant-name {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: text;
+      padding: 4px 6px;
+      border-radius: 6px;
+      word-break: break-word;
+    }
+
+    .participant-name:hover {
+      background: rgba(226, 232, 240, 0.5);
+    }
+
+    .edit-input {
+      flex: 1;
+      padding: 4px 8px !important;
+      font-size: 0.95rem !important;
+      border-radius: 6px !important;
+      border: 1.5px solid var(--primary) !important;
+      background: #fff !important;
+    }
+
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+
+    .icon-btn.delete:hover {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      border: 1.5px dashed var(--border);
+      border-radius: 12px;
+    }
+
+    /* Winner Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 24px;
+      max-width: 440px;
+      width: 100%;
+      padding: 36px 28px 28px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: popUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .winner-label {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .winner-name {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 26px;
+      word-break: break-word;
+      line-height: 1.2;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-confirm:hover {
+      background: var(--primary-hover);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes popUp {
+      from { opacity: 0; transform: scale(0.92) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .wheel-wrapper {
+        max-width: 380px;
       }
     }
-  }
+  </style>
+</head>
+<body>
 
-  /*
-    Jika ada lebih dari satu koma, hanya prioritas pertama
-    yang digunakan.
-  */
-  names = parsed;
+  <header>
+    <div class="brand">
+      <div class="brand-icon">◎</div>
+      <span>Roda Undian Kelas</span>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="soundToggleBtn" class="btn-outline active" title="Suara Efek">
+        🔊 Suara
+      </button>
+      <button type="button" id="projectorToggleBtn" class="btn-outline" title="Sembunyikan Daftar">
+        🖥️ Mode Proyektor
+      </button>
+    </div>
+  </header>
 
-  // Bersihkan koma dari textarea SEGERA.
-  namesInput.value = names.map(x=>x.text).join("\n");
+  <main>
+    <!-- Kiri: Area Roda -->
+    <section class="wheel-card">
+      <div class="wheel-wrapper">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="600" height="600"></canvas>
+        <button type="button" id="hubSpinBtn" class="spin-hub">PUTAR</button>
+      </div>
+      <button type="button" id="mainSpinBtn" class="btn-spin-main">Putar Roda</button>
+    </section>
 
-  updateCount();
-  drawWheel();
-}
+    <!-- Kanan: Panel Input & Daftar Terpisah -->
+    <aside class="side-panel">
+      <!-- Kartu 1: Kotak Input Terpisah -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>Tambah Peserta / Kelompok</span>
+        </div>
+        <div class="input-group">
+          <div class="input-row">
+            <input
+              type="text"
+              id="singleNameInput"
+              placeholder="Ketik nama lalu tekan Enter..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="button" id="addSingleBtn" class="btn-primary">Tambah</button>
+          </div>
+          <button type="button" id="toggleBulkBtn" class="bulk-toggle">+ Tambah banyak sekaligus</button>
+          <div id="bulkContainer" style="display: none; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <textarea
+              id="bulkNameInput"
+              placeholder="Masukkan satu nama per baris&#10;Contoh:&#10;Kelompok 1&#10;Kelompok 2&#10;Kelompok 3"
+              spellcheck="false"
+            ></textarea>
+            <button type="button" id="addBulkBtn" class="btn-primary" style="width: 100%;">Masukkan Semua ke Daftar</button>
+          </div>
+        </div>
+      </div>
 
-function updateCount(){
-  countEl.textContent = names.length
-    ? `${names.length} nama tersisa`
-    : "Belum ada nama";
-}
+      <!-- Kartu 2: Daftar Aktif (Bisa Diedit Langsung) -->
+      <div class="panel-card">
+        <div class="panel-title">
+          <span>Daftar Peserta</span>
+          <span class="badge-count" id="participantCount">0</span>
+        </div>
+        <div class="list-toolbar">
+          <button type="button" id="shuffleListBtn" class="btn-sm">Acak Urutan</button>
+          <button type="button" id="resetDefaultBtn" class="btn-sm">Isi Contoh</button>
+          <button type="button" id="clearAllBtn" class="btn-sm danger" style="margin-left: auto;">Hapus Semua</button>
+        </div>
+        <ul id="participantList" class="participant-list"></ul>
+      </div>
+    </aside>
+  </main>
 
-function drawWheel(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  <!-- Modal Pemenang -->
+  <div id="winnerModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="winner-label">Terpilih</div>
+      <div id="winnerNameDisplay" class="winner-name">Kelompok 1</div>
+      <button type="button" id="confirmWinnerBtn" class="btn-confirm">Lanjutkan</button>
+    </div>
+  </div>
 
-  const cx = canvas.width/2;
-  const cy = canvas.height/2;
-  const radius = 320;
-  const n = names.length;
+  <script>
+    // Palet warna cerah dan kontras untuk segmen roda
+    const SLICE_COLORS = [
+      '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6',
+      '#ec4899', '#06b6d4', '#f97316', '#6366f1',
+      '#14b8a6', '#84cc16', '#e11d48', '#0ea5e9'
+    ];
 
-  if(n === 0){
-    ctx.beginPath();
-    ctx.arc(cx,cy,radius,0,Math.PI*2);
-    ctx.fillStyle="#e5e7eb";
-    ctx.fill();
+    // State Aplikasi
+    let items = [];
+    let priorityId = null; // Hanya menyimpan maksimal 1 ID prioritas secara rahasia
+    let inputDraftHasPriority = false; // Flag saat mengetik di kotak input baru
+    let currentRotation = 0; // Dalam radian
+    let isSpinning = false;
+    let selectedWinnerId = null;
+    let editingId = null;
+    let soundEnabled = true;
 
-    ctx.fillStyle="#64748b";
-    ctx.font="bold 28px Arial";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.fillText("Tidak ada nama",cx,cy);
-    return;
-  }
+    // Elemen DOM
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const singleNameInput = document.getElementById('singleNameInput');
+    const addSingleBtn = document.getElementById('addSingleBtn');
+    const toggleBulkBtn = document.getElementById('toggleBulkBtn');
+    const bulkContainer = document.getElementById('bulkContainer');
+    const bulkNameInput = document.getElementById('bulkNameInput');
+    const addBulkBtn = document.getElementById('addBulkBtn');
+    const participantList = document.getElementById('participantList');
+    const participantCount = document.getElementById('participantCount');
+    const mainSpinBtn = document.getElementById('mainSpinBtn');
+    const hubSpinBtn = document.getElementById('hubSpinBtn');
+    const shuffleListBtn = document.getElementById('shuffleListBtn');
+    const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const winnerModal = document.getElementById('winnerModal');
+    const winnerNameDisplay = document.getElementById('winnerNameDisplay');
+    const confirmWinnerBtn = document.getElementById('confirmWinnerBtn');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const projectorToggleBtn = document.getElementById('projectorToggleBtn');
 
-  const arc = Math.PI*2/n;
-
-  for(let i=0;i<n;i++){
-    const start = -Math.PI/2 + i*arc;
-    const end = start + arc;
-
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,radius,start,end);
-    ctx.closePath();
-
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.fill();
-
-    ctx.strokeStyle="#fff";
-    ctx.lineWidth=3;
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.rotate(start + arc/2);
-
-    const fontSize = Math.max(13,Math.min(25,280/n));
-    ctx.font=`bold ${fontSize}px Arial`;
-    ctx.fillStyle="#fff";
-    ctx.textAlign="right";
-    ctx.textBaseline="middle";
-    ctx.shadowColor="rgba(0,0,0,.25)";
-    ctx.shadowBlur=3;
-
-    let label=names[i].text;
-
-    // Potong nama yang terlalu panjang agar tetap rapi.
-    const maxChars=Math.max(10,Math.floor(38/n*10));
-    if(label.length>maxChars){
-      label=label.slice(0,maxChars-1)+"…";
+    // Web Audio API untuk efek suara klik & menang
+    let audioCtx = null;
+    function playTickSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.035);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.035);
+      } catch (e) {}
     }
 
-    ctx.fillText(label,radius-24,0);
-    ctx.restore();
-  }
+    function playWinSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.09 + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + idx * 0.09);
+          osc.stop(audioCtx.currentTime + idx * 0.09 + 0.35);
+        });
+      } catch (e) {}
+    }
 
-  ctx.beginPath();
-  ctx.arc(cx,cy,radius,0,Math.PI*2);
-  ctx.strokeStyle="#fff";
-  ctx.lineWidth=8;
-  ctx.stroke();
-}
+    function generateId() {
+      return 'id_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
 
-function getPriorityIndex(){
-  return names.findIndex(item=>item.priority);
-}
+    function loadDefaultItems() {
+      items = [
+        { id: generateId(), name: 'Kelompok 1' },
+        { id: generateId(), name: 'Kelompok 2' },
+        { id: generateId(), name: 'Kelompok 3' },
+        { id: generateId(), name: 'Kelompok 4' },
+        { id: generateId(), name: 'Kelompok 5' },
+        { id: generateId(), name: 'Kelompok 6' }
+      ];
+      priorityId = null;
+      editingId = null;
+      renderAll();
+    }
 
-function getRandomIndex(){
-  return Math.floor(Math.random()*names.length);
-}
+    // =========================================================================
+    // LOGIKA TANDA KOMA TAK TERLIHAT (REAL-TIME INVISIBLE COMMA INTERCEPTION)
+    // =========================================================================
+    singleNameInput.addEventListener('keydown', (e) => {
+      if (e.key === ',') {
+        e.preventDefault(); // Koma dicegat total sebelum sempat dirender di layar
+        inputDraftHasPriority = true;
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addSingleItem();
+      }
+    });
 
-function spin(){
-  if(spinning || names.length===0) return;
+    // Pengaman tambahan jika user menempelkan teks (paste) yang mengandung koma
+    singleNameInput.addEventListener('input', () => {
+      if (singleNameInput.value.includes(',')) {
+        singleNameInput.value = singleNameInput.value.replace(/,/g, '');
+        inputDraftHasPriority = true;
+      }
+    });
 
-  spinning=true;
-  spinBtn.disabled=true;
-  updateBtn.disabled=true;
+    function addSingleItem() {
+      const cleanName = singleNameInput.value.replace(/,/g, '').trim();
+      if (!cleanName) {
+        singleNameInput.value = '';
+        inputDraftHasPriority = false;
+        return;
+      }
+      const newItem = { id: generateId(), name: cleanName };
+      items.push(newItem);
 
-  result.textContent="Memutar...";
+      if (inputDraftHasPriority) {
+        priorityId = newItem.id; // Timpa prioritas lama sehingga hanya ada 1 prioritas
+      }
 
-  const selectedIndex =
-    getPriorityIndex() !== -1
-      ? getPriorityIndex()
-      : getRandomIndex();
+      singleNameInput.value = '';
+      inputDraftHasPriority = false;
+      renderAll();
+    }
 
-  const n=names.length;
-  const arc=360/n;
+    addSingleBtn.addEventListener('click', addSingleItem);
 
-  // Segmen terpilih diarahkan tepat ke pointer atas.
-  const targetCenter=selectedIndex*arc + arc/2;
-  const desiredRotation=360-targetCenter;
+    // Tambah banyak sekaligus (Bulk)
+    toggleBulkBtn.addEventListener('click', () => {
+      const isHidden = bulkContainer.style.display === 'none';
+      bulkContainer.style.display = isHidden ? 'flex' : 'none';
+      toggleBulkBtn.textContent = isHidden ? '− Tutup input banyak' : '+ Tambah banyak sekaligus';
+    });
 
-  const currentNormalized=((currentRotation%360)+360)%360;
+    // Mencegah koma terlihat di textarea juga
+    let bulkPriorityLineIndex = -1;
+    bulkNameInput.addEventListener('keydown', (e) => {
+      if (e.key === ',') {
+        e.preventDefault();
+        const cursorPos = bulkNameInput.selectionStart;
+        const textBefore = bulkNameInput.value.slice(0, cursorPos);
+        bulkPriorityLineIndex = textBefore.split('\n').length - 1;
+      }
+    });
 
-  let delta=desiredRotation-currentNormalized;
-  if(delta<0) delta+=360;
+    bulkNameInput.addEventListener('input', () => {
+      if (bulkNameInput.value.includes(',')) {
+        const lines = bulkNameInput.value.split('\n');
+        lines.forEach((line, idx) => {
+          if (line.includes(',')) {
+            bulkPriorityLineIndex = idx;
+          }
+        });
+        bulkNameInput.value = bulkNameInput.value.replace(/,/g, '');
+      }
+    });
 
-  const extraTurns=6+Math.floor(Math.random()*3);
-  delta += extraTurns*360;
+    addBulkBtn.addEventListener('click', () => {
+      const rawLines = bulkNameInput.value.split('\n');
+      rawLines.forEach((line, idx) => {
+        const cleanName = line.replace(/,/g, '').trim();
+        if (cleanName) {
+          const newItem = { id: generateId(), name: cleanName };
+          items.push(newItem);
+          if (idx === bulkPriorityLineIndex) {
+            priorityId = newItem.id;
+          }
+        }
+      });
+      bulkNameInput.value = '';
+      bulkPriorityLineIndex = -1;
+      renderAll();
+    });
 
-  const startRotation=currentRotation;
-  const endRotation=currentRotation+delta;
-  const duration=4500;
-  const startTime=performance.now();
+    // =========================================================================
+    // RENDER DAFTAR PESERTA DENGAN INLINE EDITING & KOMA TAK TERLIHAT
+    // =========================================================================
+    function renderList() {
+      participantList.innerHTML = '';
+      participantCount.textContent = items.length;
 
-  function animate(now){
-    const progress=Math.min(1,(now-startTime)/duration);
+      if (items.length === 0) {
+        participantList.innerHTML = '<li class="empty-state">Belum ada peserta di daftar.<br>Tambahkan nama melalui kotak di atas.</li>';
+        return;
+      }
 
-    // Ease-out.
-    const eased=1-Math.pow(1-progress,4);
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'participant-item' + (editingId === item.id ? ' editing' : '');
 
-    currentRotation=
-      startRotation+(endRotation-startRotation)*eased;
+        const dot = document.createElement('span');
+        dot.className = 'color-dot';
+        dot.style.backgroundColor = SLICE_COLORS[index % SLICE_COLORS.length];
+        li.appendChild(dot);
 
-    canvas.style.transform=`rotate(${currentRotation}deg)`;
+        if (editingId === item.id) {
+          const editInput = document.createElement('input');
+          editInput.type = 'text';
+          editInput.className = 'edit-input';
+          editInput.value = item.name;
+          editInput.autocomplete = 'off';
+          editInput.spellcheck = false;
 
-    if(progress<1){
+          let editTriggeredPriority = false;
+
+          // Pencegahan koma secara real-time saat mengedit nama di daftar
+          editInput.addEventListener('keydown', (e) => {
+            if (e.key === ',') {
+              e.preventDefault(); // Koma sama sekali tidak muncul di layar
+              editTriggeredPriority = true;
+              return;
+            }
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commitEdit(item.id, editInput.value, editTriggeredPriority);
+            } else if (e.key === 'Escape') {
+              editingId = null;
+              renderList();
+            }
+          });
+
+          editInput.addEventListener('input', () => {
+            if (editInput.value.includes(',')) {
+              editInput.value = editInput.value.replace(/,/g, '');
+              editTriggeredPriority = true;
+            }
+          });
+
+          editInput.addEventListener('blur', () => {
+            commitEdit(item.id, editInput.value, editTriggeredPriority);
+          });
+
+          li.appendChild(editInput);
+          setTimeout(() => {
+            editInput.focus();
+            editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+          }, 0);
+        } else {
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'participant-name';
+          nameSpan.textContent = item.name; // Tampilan 100% bersih tanpa tanda apa pun
+          nameSpan.title = 'Klik untuk mengedit nama';
+          nameSpan.addEventListener('click', () => {
+            if (isSpinning) return;
+            editingId = item.id;
+            renderList();
+          });
+          li.appendChild(nameSpan);
+
+          const actions = document.createElement('div');
+          actions.className = 'item-actions';
+
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'icon-btn';
+          editBtn.title = 'Edit nama';
+          editBtn.innerHTML = '✎';
+          editBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            editingId = item.id;
+            renderList();
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'icon-btn delete';
+          delBtn.title = 'Hapus dari daftar';
+          delBtn.innerHTML = '✕';
+          delBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            items = items.filter(i => i.id !== item.id);
+            if (priorityId === item.id) priorityId = null;
+            renderAll();
+          });
+
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+          li.appendChild(actions);
+        }
+
+        participantList.appendChild(li);
+      });
+    }
+
+    function commitEdit(id, rawValue, triggeredPriority) {
+      if (editingId !== id) return;
+      const cleanName = rawValue.replace(/,/g, '').trim();
+      const target = items.find(i => i.id === id);
+
+      if (target) {
+        if (cleanName) {
+          target.name = cleanName;
+        }
+        if (triggeredPriority) {
+          priorityId = id; // Jadikan satu-satunya nama prioritas secara diam-diam
+        }
+      }
+
+      editingId = null;
+      renderAll();
+    }
+
+    // =========================================================================
+    // MENGGAMBAR RODA (CANVAS)
+    // =========================================================================
+    function drawWheel() {
+      const size = canvas.width;
+      const center = size / 2;
+      const radius = center - 16;
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Bingkai luar roda
+      ctx.beginPath();
+      ctx.arc(center, center, radius + 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+
+      if (items.length === 0) {
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fill();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 22px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Daftar Kosong', center, center);
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / items.length;
+
+      items.forEach((item, index) => {
+        const startAngle = currentRotation + index * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Gambar irisan segmen
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = SLICE_COLORS[index % SLICE_COLORS.length];
+        ctx.fill();
+
+        // Garis pemisah antar segmen
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Teks nama peserta (seragam untuk semua peserta, tanpa indikator apa pun)
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        const fontSize = items.length > 16 ? 15 : items.length > 10 ? 18 : 22;
+        ctx.font = `700 ${fontSize}px Segoe UI, sans-serif`;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        ctx.shadowBlur = 4;
+
+        let displayName = item.name;
+        const maxTextWidth = radius - 75;
+        while (ctx.measureText(displayName).width > maxTextWidth && displayName.length > 3) {
+          displayName = displayName.slice(0, -2) + '…';
+        }
+
+        ctx.fillText(displayName, radius - 26, 0);
+        ctx.restore();
+      });
+    }
+
+    function updateButtonsState() {
+      const disabled = isSpinning || items.length === 0;
+      mainSpinBtn.disabled = disabled;
+      hubSpinBtn.disabled = disabled;
+    }
+
+    function renderAll() {
+      renderList();
+      drawWheel();
+      updateButtonsState();
+    }
+
+    // =========================================================================
+    // LOGIKA PUTARAN RODA (PRIORITAS PASTI TERPILIH, LALU KEMBALI ACAK)
+    // =========================================================================
+    function spinWheel() {
+      if (isSpinning || items.length === 0) return;
+
+      // Pastikan mode edit selesai sebelum berputar
+      if (editingId !== null) {
+        editingId = null;
+        renderList();
+      }
+
+      isSpinning = true;
+      updateButtonsState();
+
+      const count = items.length;
+      const sliceAngle = (Math.PI * 2) / count;
+
+      // Tentukan indeks pemenang
+      let targetIndex = -1;
+      if (priorityId) {
+        targetIndex = items.findIndex(item => item.id === priorityId);
+      }
+
+      // Jika tidak ada prioritas (atau sudah terhapus), pilih acak murni
+      if (targetIndex === -1) {
+        targetIndex = Math.floor(Math.random() * count);
+      }
+
+      selectedWinnerId = items[targetIndex].id;
+
+      // Jarum penunjuk berada tepat di sudut 0 radian (sisi kanan / jam 3).
+      // Sudut tengah segmen target pada rotasi R adalah: R + (targetIndex + 0.5) * sliceAngle.
+      // Agar berhenti di dalam segmen target (dengan variasi alami di dalam segmen agar terlihat organik):
+      const randomOffsetInsideSlice = (Math.random() * 0.64 - 0.32) * sliceAngle;
+      const desiredNormalizedRotation =
+        (Math.PI * 2 - ((targetIndex + 0.5) * sliceAngle + randomOffsetInsideSlice)) % (Math.PI * 2);
+
+      const currentNormalized = ((currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      let deltaAngle = desiredNormalizedRotation - currentNormalized;
+      if (deltaAngle <= 0) {
+        deltaAngle += Math.PI * 2;
+      }
+
+      // Tambahkan 6 hingga 8 putaran penuh agar animasi terasa natural dan menegangkan
+      const extraSpins = (6 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+      const startRotation = currentRotation;
+      const totalRotationDelta = extraSpins + deltaAngle;
+      const duration = 4600; // 4.6 detik
+      const startTime = performance.now();
+
+      let lastTickIndex = -1;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Ease-out quintic untuk perlambatan mulus di akhir
+        const easeOut = 1 - Math.pow(1 - progress, 5);
+        currentRotation = startRotation + totalRotationDelta * easeOut;
+
+        // Efek suara klik tiap melewati batas segmen
+        const normalizedAngle = ((Math.PI * 2 - (currentRotation % (Math.PI * 2))) % (Math.PI * 2));
+        const currentSliceIndex = Math.floor(normalizedAngle / sliceAngle) % count;
+        if (currentSliceIndex !== lastTickIndex) {
+          playTickSound();
+          lastTickIndex = currentSliceIndex;
+        }
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          playWinSound();
+          showWinnerModal(items[targetIndex].name);
+        }
+      }
+
       requestAnimationFrame(animate);
-      return;
     }
 
-    finishSpin(selectedIndex);
-  }
+    function showWinnerModal(name) {
+      winnerNameDisplay.textContent = name;
+      winnerModal.classList.add('show');
+    }
 
-  requestAnimationFrame(animate);
-}
+    // Setelah pemenang dikonfirmasi:
+    // 1. Nama terpilih otomatis terhapus dari daftar & roda
+    // 2. Status prioritas di-reset sehingga putaran berikutnya kembali acak
+    confirmWinnerBtn.addEventListener('click', () => {
+      winnerModal.classList.remove('show');
+      if (selectedWinnerId) {
+        items = items.filter(item => item.id !== selectedWinnerId);
+        if (priorityId === selectedWinnerId) {
+          priorityId = null;
+        }
+        selectedWinnerId = null;
+      }
+      renderAll();
+    });
 
-function finishSpin(index){
-  const selected=names[index];
-  const selectedName=selected.text;
+    mainSpinBtn.addEventListener('click', spinWheel);
+    hubSpinBtn.addEventListener('click', spinWheel);
 
-  /*
-    PENTING:
-    Nama yang sudah terpilih langsung dikeluarkan
-    dari array dan textarea.
-  */
-  names.splice(index,1);
-  namesInput.value=names.map(x=>x.text).join("\n");
+    // Toolbar Daftar
+    shuffleListBtn.addEventListener('click', () => {
+      if (isSpinning || items.length < 2) return;
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      renderAll();
+    });
 
-  result.textContent=`🎉 ${selectedName}`;
-  statusEl.textContent=`${selectedName} telah terpilih dan dikeluarkan dari roda.`;
+    resetDefaultBtn.addEventListener('click', () => {
+      if (isSpinning) return;
+      loadDefaultItems();
+    });
 
-  updateCount();
-  drawWheel();
+    clearAllBtn.addEventListener('click', () => {
+      if (isSpinning) return;
+      items = [];
+      priorityId = null;
+      editingId = null;
+      renderAll();
+    });
 
-  spinning=false;
-  spinBtn.disabled=false;
-  updateBtn.disabled=false;
+    // Toggle Suara & Mode Proyektor
+    soundToggleBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundToggleBtn.classList.toggle('active', soundEnabled);
+      soundToggleBtn.textContent = soundEnabled ? '🔊 Suara' : '🔇 Bisu';
+    });
 
-  /*
-    Jika masih ada nama, putaran berikutnya otomatis acak,
-    kecuali ada satu nama prioritas baru yang ditambahkan.
-  */
-}
+    projectorToggleBtn.addEventListener('click', () => {
+      const isProjector = document.body.classList.toggle('projector-mode');
+      projectorToggleBtn.classList.toggle('active', isProjector);
+      projectorToggleBtn.textContent = isProjector ? '📋 Tampilkan Daftar' : '🖥️ Mode Proyektor';
+    });
 
-function resetAll(){
-  names=[];
-  currentRotation=0;
-
-  namesInput.value="";
-  canvas.style.transform="rotate(0deg)";
-
-  result.textContent="Siap untuk diputar!";
-  statusEl.textContent="";
-
-  updateCount();
-  drawWheel();
-}
-
-updateBtn.addEventListener("click",parseInput);
-spinBtn.addEventListener("click",spin);
-resetBtn.addEventListener("click",resetAll);
-
-// Saat mengetik, koma boleh digunakan sebagai tanda prioritas.
-// Begitu tombol Perbarui Roda ditekan, koma langsung disembunyikan.
-drawWheel();
-updateCount();
-</script>
+    // Inisialisasi awal
+    loadDefaultItems();
+  </script>
 </body>
 </html>
