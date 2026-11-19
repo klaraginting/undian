@@ -7,95 +7,92 @@
 <style>
 *{box-sizing:border-box}
 body{
-  margin:0; min-height:100vh; font-family:Arial,Helvetica,sans-serif;
-  background:linear-gradient(135deg,#eef4ff,#fdf6ff);
-  color:#1f2937; display:flex; justify-content:center; padding:24px;
+  margin:0;min-height:100vh;padding:24px;
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#fdf6ff);color:#1f2937;
 }
-.container{width:min(1100px,100%); display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start}
-.card{background:#fff; border-radius:22px; padding:24px; box-shadow:0 10px 35px rgba(31,41,55,.12)}
-h1{margin:0 0 8px;text-align:center;font-size:30px}
-.subtitle{text-align:center;color:#6b7280;margin:0 0 18px}
+.container{
+  width:min(1100px,100%);margin:auto;
+  display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start;
+}
+.card{
+  background:#fff;border-radius:22px;padding:24px;
+  box-shadow:0 10px 35px rgba(31,41,55,.12);
+}
+h1{margin:0 0 6px;text-align:center;font-size:30px}
+.subtitle{text-align:center;color:#64748b;margin:0 0 18px}
 .wheel-wrap{position:relative;width:min(620px,90vw);aspect-ratio:1;margin:auto}
-canvas{width:100%;height:100%;display:block}
+canvas{width:100%;height:100%;display:block;transition:transform 0s}
 .pointer{
- position:absolute;top:-2px;left:50%;transform:translateX(-50%);
- width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;
- border-top:34px solid #ef4444;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));z-index:3
+  position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:18px solid transparent;
+  border-right:18px solid transparent;border-top:34px solid #ef4444;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));z-index:3;
 }
 .spin-btn{
- position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
- width:112px;height:112px;border-radius:50%;border:7px solid #fff;
- background:#2563eb;color:#fff;font-size:21px;font-weight:800;cursor:pointer;
- box-shadow:0 5px 18px rgba(37,99,235,.4);z-index:4;
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:112px;height:112px;border-radius:50%;border:7px solid #fff;
+  background:#2563eb;color:#fff;font-size:21px;font-weight:800;
+  cursor:pointer;box-shadow:0 5px 18px rgba(37,99,235,.4);z-index:4;
 }
 .spin-btn:hover{background:#1d4ed8}
 .spin-btn:disabled{background:#94a3b8;cursor:not-allowed;box-shadow:none}
 .result{
- margin-top:18px;text-align:center;min-height:60px;padding:14px;border-radius:14px;
- background:#eff6ff;font-size:22px;font-weight:800;color:#1d4ed8
+  margin-top:18px;text-align:center;min-height:60px;padding:14px;
+  border-radius:14px;background:#eff6ff;font-size:22px;
+  font-weight:800;color:#1d4ed8;
 }
 label{font-weight:700;display:block;margin-bottom:8px}
 textarea{
- width:100%;min-height:260px;resize:vertical;padding:12px;border:1px solid #d1d5db;
- border-radius:12px;font-size:15px;line-height:1.6;outline:none
+  width:100%;min-height:300px;resize:vertical;padding:12px;
+  border:1px solid #d1d5db;border-radius:12px;font-size:15px;
+  line-height:1.6;outline:none;
 }
 textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 button.small{
- border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;
- background:#e5e7eb;color:#111827;margin-top:10px
+  border:0;border-radius:10px;padding:10px 14px;font-weight:700;
+  cursor:pointer;background:#e5e7eb;color:#111827;margin-top:10px;
 }
-button.small.primary{background:#2563eb;color:white}
-.info{font-size:13px;color:#6b7280;line-height:1.5;margin-top:12px}
-.status{font-size:13px;color:#475569;margin-top:10px;min-height:18px}
+button.small.primary{background:#2563eb;color:#fff}
+.status{font-size:13px;color:#475569;margin-top:12px;min-height:18px}
+.count{
+  margin-top:10px;font-size:13px;color:#64748b;text-align:right;
+}
 @media(max-width:850px){
- .container{grid-template-columns:1fr}
- .card.side{order:2}
- .wheel-wrap{width:min(600px,92vw)}
+  .container{grid-template-columns:1fr}
+  .wheel-wrap{width:min(600px,92vw)}
 }
 </style>
 </head>
+
 <body>
 <div class="container">
-  <section class="card">
-    <h1>🎡 Spin Wheel</h1>
-    <p class="subtitle">Pilih nama secara acak atau gunakan satu nama prioritas.</p>
 
-    <div class="wheel-wrap">
-      <div class="pointer"></div>
-      <canvas id="wheel" width="700" height="700"></canvas>
-      <button id="spinBtn" class="spin-btn">SPIN</button>
-    </div>
+<section class="card">
+  <h1>🎡 Spin Wheel</h1>
+  <p class="subtitle">Putar untuk menentukan nama secara acak.</p>
 
-    <div id="result" class="result">Siap untuk diputar!</div>
-  </section>
+  <div class="wheel-wrap">
+    <div class="pointer"></div>
+    <canvas id="wheel" width="700" height="700"></canvas>
+    <button id="spinBtn" class="spin-btn">SPIN</button>
+  </div>
 
-  <aside class="card side">
-    <label for="names">Daftar nama</label>
-    <textarea id="names" placeholder="Contoh:
-Kelompok 1
-Kelompok 2
-Kelompok 3,
-Kelompok 4
-Kelompok 5"></textarea>
+  <div id="result" class="result">Siap untuk diputar!</div>
+</section>
 
-    <button id="updateBtn" class="small primary">Perbarui Roda</button>
-    <button id="resetBtn" class="small">Reset Semua</button>
+<aside class="card">
+  <label for="names">Daftar Nama</label>
 
-    <div class="info">
-      <b>Cara membuat prioritas:</b><br>
-      Tambahkan koma <b>di akhir nama</b>. Contoh:
-      <br><br>
-      Kelompok 1<br>
-      Kelompok 2<br>
-      <b>Kelompok 3,</b><br>
-      Kelompok 4
-      <br><br>
-      Koma tidak akan terlihat di daftar maupun roda. Nama yang diberi koma akan
-      dipastikan terpilih pada putaran berikutnya, lalu prioritasnya otomatis hilang.
-      Setelah itu, putaran berikutnya kembali acak.
-    </div>
-    <div id="status" class="status"></div>
-  </aside>
+  <textarea id="names" placeholder="Masukkan satu nama setiap baris"></textarea>
+
+  <button id="updateBtn" class="small primary">Perbarui Roda</button>
+  <button id="resetBtn" class="small">Reset</button>
+
+  <div id="count" class="count"></div>
+  <div id="status" class="status"></div>
+</aside>
+
 </div>
 
 <script>
@@ -107,6 +104,7 @@ const updateBtn = document.getElementById("updateBtn");
 const resetBtn = document.getElementById("resetBtn");
 const result = document.getElementById("result");
 const statusEl = document.getElementById("status");
+const countEl = document.getElementById("count");
 
 let names = [];
 let currentRotation = 0;
@@ -117,49 +115,75 @@ const colors = [
   "#0891b2","#db2777","#65a30d","#ea580c","#4f46e5"
 ];
 
-function cleanName(raw){
-  return raw.trim().replace(/,+$/,"").trim();
-}
+/*
+  FORMAT INPUT:
+  Nama biasa:
+  Kelompok 1
 
-function readNames(){
+  Nama prioritas:
+  Kelompok 2,
+
+  Koma hanya berfungsi sebagai tanda prioritas.
+  Setelah dibaca, koma langsung dihapus dari tampilan input.
+*/
+
+function parseInput(){
   const lines = namesInput.value.split(/\r?\n/);
-  names = lines
-    .map(line => ({
-      text: cleanName(line),
-      priority: /,\s*$/.test(line)
-    }))
-    .filter(x => x.text !== "");
+  const parsed = [];
 
-  // Hanya satu nama yang boleh menjadi prioritas.
-  const priorityIndex = names.findIndex(x => x.priority);
-  if(priorityIndex !== -1){
-    names = names.map((item,i)=>({...item, priority:i===priorityIndex}));
+  for(const line of lines){
+    const raw = line.trim();
+    if(!raw) continue;
+
+    const priority = /,\s*$/.test(raw);
+    const text = raw.replace(/,\s*$/,"").trim();
+
+    if(text){
+      parsed.push({text, priority:false});
+      if(priority && !parsed.some(x=>x.priority)){
+        parsed[parsed.length-1].priority = true;
+      }
+    }
   }
 
+  /*
+    Jika ada lebih dari satu koma, hanya prioritas pertama
+    yang digunakan.
+  */
+  names = parsed;
+
+  // Bersihkan koma dari textarea SEGERA.
+  namesInput.value = names.map(x=>x.text).join("\n");
+
+  updateCount();
   drawWheel();
-  statusEl.textContent = names.length
-    ? `${names.length} nama tersedia.`
-    : "Belum ada nama.";
+}
+
+function updateCount(){
+  countEl.textContent = names.length
+    ? `${names.length} nama tersisa`
+    : "Belum ada nama";
 }
 
 function drawWheel(){
-  const n = names.length;
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const cx = canvas.width/2;
   const cy = canvas.height/2;
   const radius = 320;
+  const n = names.length;
 
   if(n === 0){
     ctx.beginPath();
     ctx.arc(cx,cy,radius,0,Math.PI*2);
     ctx.fillStyle="#e5e7eb";
     ctx.fill();
+
     ctx.fillStyle="#64748b";
     ctx.font="bold 28px Arial";
     ctx.textAlign="center";
     ctx.textBaseline="middle";
-    ctx.fillText("Masukkan nama",cx,cy);
+    ctx.fillText("Tidak ada nama",cx,cy);
     return;
   }
 
@@ -173,17 +197,19 @@ function drawWheel(){
     ctx.moveTo(cx,cy);
     ctx.arc(cx,cy,radius,start,end);
     ctx.closePath();
-    ctx.fillStyle=colors[i%colors.length];
+
+    ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
+
     ctx.strokeStyle="#fff";
     ctx.lineWidth=3;
     ctx.stroke();
 
     ctx.save();
     ctx.translate(cx,cy);
-    ctx.rotate(start+arc/2);
+    ctx.rotate(start + arc/2);
 
-    let fontSize = Math.max(13, Math.min(25, 280/n));
+    const fontSize = Math.max(13,Math.min(25,280/n));
     ctx.font=`bold ${fontSize}px Arial`;
     ctx.fillStyle="#fff";
     ctx.textAlign="right";
@@ -191,9 +217,13 @@ function drawWheel(){
     ctx.shadowColor="rgba(0,0,0,.25)";
     ctx.shadowBlur=3;
 
-    let label = names[i].text;
-    const maxChars = Math.max(8, Math.floor(34/n*10));
-    if(label.length > maxChars) label = label.slice(0,maxChars-1)+"…";
+    let label=names[i].text;
+
+    // Potong nama yang terlalu panjang agar tetap rapi.
+    const maxChars=Math.max(10,Math.floor(38/n*10));
+    if(label.length>maxChars){
+      label=label.slice(0,maxChars-1)+"…";
+    }
 
     ctx.fillText(label,radius-24,0);
     ctx.restore();
@@ -206,96 +236,120 @@ function drawWheel(){
   ctx.stroke();
 }
 
-function randomIndex(){
+function getPriorityIndex(){
+  return names.findIndex(item=>item.priority);
+}
+
+function getRandomIndex(){
   return Math.floor(Math.random()*names.length);
 }
 
-function priorityIndex(){
-  return names.findIndex(x => x.priority);
-}
-
 function spin(){
-  if(spinning || names.length < 1) return;
+  if(spinning || names.length===0) return;
 
-  spinning = true;
-  spinBtn.disabled = true;
-  updateBtn.disabled = true;
-  result.textContent = "Memutar...";
+  spinning=true;
+  spinBtn.disabled=true;
+  updateBtn.disabled=true;
 
-  const targetIndex = priorityIndex() !== -1 ? priorityIndex() : randomIndex();
-  const n = names.length;
-  const arc = 360/n;
+  result.textContent="Memutar...";
 
-  // Posisi pusat segmen target terhadap pointer di atas.
-  const targetCenterDeg = targetIndex*arc + arc/2;
-  const desiredRotation = 360 - targetCenterDeg;
+  const selectedIndex =
+    getPriorityIndex() !== -1
+      ? getPriorityIndex()
+      : getRandomIndex();
 
-  // Tambahkan 6-9 putaran penuh agar animasi terasa seperti spin wheel.
-  const extraTurns = 6 + Math.floor(Math.random()*4);
-  const normalizedCurrent = currentRotation % 360;
-  let delta = desiredRotation - normalizedCurrent;
-  if(delta < 0) delta += 360;
+  const n=names.length;
+  const arc=360/n;
+
+  // Segmen terpilih diarahkan tepat ke pointer atas.
+  const targetCenter=selectedIndex*arc + arc/2;
+  const desiredRotation=360-targetCenter;
+
+  const currentNormalized=((currentRotation%360)+360)%360;
+
+  let delta=desiredRotation-currentNormalized;
+  if(delta<0) delta+=360;
+
+  const extraTurns=6+Math.floor(Math.random()*3);
   delta += extraTurns*360;
 
-  const startRotation = currentRotation;
-  const endRotation = currentRotation + delta;
-  const duration = 4800;
-
-  const startTime = performance.now();
+  const startRotation=currentRotation;
+  const endRotation=currentRotation+delta;
+  const duration=4500;
+  const startTime=performance.now();
 
   function animate(now){
-    const t = Math.min(1,(now-startTime)/duration);
-    const eased = 1-Math.pow(1-t,4);
-    currentRotation = startRotation + (endRotation-startRotation)*eased;
+    const progress=Math.min(1,(now-startTime)/duration);
+
+    // Ease-out.
+    const eased=1-Math.pow(1-progress,4);
+
+    currentRotation=
+      startRotation+(endRotation-startRotation)*eased;
 
     canvas.style.transform=`rotate(${currentRotation}deg)`;
 
-    if(t < 1){
+    if(progress<1){
       requestAnimationFrame(animate);
-    }else{
-      spinning = false;
-      spinBtn.disabled = false;
-      updateBtn.disabled = false;
-
-      const selected = names[targetIndex];
-      result.textContent = `🎉 ${selected.text}`;
-
-      // Prioritas otomatis hilang setelah terpilih.
-      if(selected.priority){
-        selected.priority = false;
-        namesInput.value = names.map(x => x.text).join("\n");
-        statusEl.textContent = `${selected.text} terpilih. Prioritasnya sudah dinonaktifkan.`;
-      }else{
-        statusEl.textContent = `${selected.text} terpilih secara acak.`;
-      }
-
-      drawWheel();
-      canvas.style.transform=`rotate(${currentRotation}deg)`;
+      return;
     }
+
+    finishSpin(selectedIndex);
   }
 
   requestAnimationFrame(animate);
 }
 
+function finishSpin(index){
+  const selected=names[index];
+  const selectedName=selected.text;
+
+  /*
+    PENTING:
+    Nama yang sudah terpilih langsung dikeluarkan
+    dari array dan textarea.
+  */
+  names.splice(index,1);
+  namesInput.value=names.map(x=>x.text).join("\n");
+
+  result.textContent=`🎉 ${selectedName}`;
+  statusEl.textContent=`${selectedName} telah terpilih dan dikeluarkan dari roda.`;
+
+  updateCount();
+  drawWheel();
+
+  spinning=false;
+  spinBtn.disabled=false;
+  updateBtn.disabled=false;
+
+  /*
+    Jika masih ada nama, putaran berikutnya otomatis acak,
+    kecuali ada satu nama prioritas baru yang ditambahkan.
+  */
+}
+
 function resetAll(){
-  namesInput.value="";
   names=[];
   currentRotation=0;
+
+  namesInput.value="";
   canvas.style.transform="rotate(0deg)";
+
   result.textContent="Siap untuk diputar!";
   statusEl.textContent="";
+
+  updateCount();
   drawWheel();
 }
 
+updateBtn.addEventListener("click",parseInput);
 spinBtn.addEventListener("click",spin);
-updateBtn.addEventListener("click",readNames);
 resetBtn.addEventListener("click",resetAll);
 
-namesInput.addEventListener("input",()=>{
-  statusEl.textContent="";
-});
-
-readNames();
+// Saat mengetik, koma boleh digunakan sebagai tanda prioritas.
+// Begitu tombol Perbarui Roda ditekan, koma langsung disembunyikan.
+drawWheel();
+updateCount();
 </script>
 </body>
 </html>
