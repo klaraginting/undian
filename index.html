@@ -1,12 +1,301 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kelas Bu Klara</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin Wheel Kelas</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#fdf6ff);
+  color:#1f2937; display:flex; justify-content:center; padding:24px;
+}
+.container{width:min(1100px,100%); display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start}
+.card{background:#fff; border-radius:22px; padding:24px; box-shadow:0 10px 35px rgba(31,41,55,.12)}
+h1{margin:0 0 8px;text-align:center;font-size:30px}
+.subtitle{text-align:center;color:#6b7280;margin:0 0 18px}
+.wheel-wrap{position:relative;width:min(620px,90vw);aspect-ratio:1;margin:auto}
+canvas{width:100%;height:100%;display:block}
+.pointer{
+ position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+ width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;
+ border-top:34px solid #ef4444;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));z-index:3
+}
+.spin-btn{
+ position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:112px;height:112px;border-radius:50%;border:7px solid #fff;
+ background:#2563eb;color:#fff;font-size:21px;font-weight:800;cursor:pointer;
+ box-shadow:0 5px 18px rgba(37,99,235,.4);z-index:4;
+}
+.spin-btn:hover{background:#1d4ed8}
+.spin-btn:disabled{background:#94a3b8;cursor:not-allowed;box-shadow:none}
+.result{
+ margin-top:18px;text-align:center;min-height:60px;padding:14px;border-radius:14px;
+ background:#eff6ff;font-size:22px;font-weight:800;color:#1d4ed8
+}
+label{font-weight:700;display:block;margin-bottom:8px}
+textarea{
+ width:100%;min-height:260px;resize:vertical;padding:12px;border:1px solid #d1d5db;
+ border-radius:12px;font-size:15px;line-height:1.6;outline:none
+}
+textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+button.small{
+ border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;
+ background:#e5e7eb;color:#111827;margin-top:10px
+}
+button.small.primary{background:#2563eb;color:white}
+.info{font-size:13px;color:#6b7280;line-height:1.5;margin-top:12px}
+.status{font-size:13px;color:#475569;margin-top:10px;min-height:18px}
+@media(max-width:850px){
+ .container{grid-template-columns:1fr}
+ .card.side{order:2}
+ .wheel-wrap{width:min(600px,92vw)}
+}
+</style>
 </head>
 <body>
-  <h1>Selamat datang!</h1>
-  <p>Website kelas IPA!</p>
+<div class="container">
+  <section class="card">
+    <h1>🎡 Spin Wheel</h1>
+    <p class="subtitle">Pilih nama secara acak atau gunakan satu nama prioritas.</p>
+
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="700" height="700"></canvas>
+      <button id="spinBtn" class="spin-btn">SPIN</button>
+    </div>
+
+    <div id="result" class="result">Siap untuk diputar!</div>
+  </section>
+
+  <aside class="card side">
+    <label for="names">Daftar nama</label>
+    <textarea id="names" placeholder="Contoh:
+Kelompok 1
+Kelompok 2
+Kelompok 3,
+Kelompok 4
+Kelompok 5"></textarea>
+
+    <button id="updateBtn" class="small primary">Perbarui Roda</button>
+    <button id="resetBtn" class="small">Reset Semua</button>
+
+    <div class="info">
+      <b>Cara membuat prioritas:</b><br>
+      Tambahkan koma <b>di akhir nama</b>. Contoh:
+      <br><br>
+      Kelompok 1<br>
+      Kelompok 2<br>
+      <b>Kelompok 3,</b><br>
+      Kelompok 4
+      <br><br>
+      Koma tidak akan terlihat di daftar maupun roda. Nama yang diberi koma akan
+      dipastikan terpilih pada putaran berikutnya, lalu prioritasnya otomatis hilang.
+      Setelah itu, putaran berikutnya kembali acak.
+    </div>
+    <div id="status" class="status"></div>
+  </aside>
+</div>
+
+<script>
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const namesInput = document.getElementById("names");
+const spinBtn = document.getElementById("spinBtn");
+const updateBtn = document.getElementById("updateBtn");
+const resetBtn = document.getElementById("resetBtn");
+const result = document.getElementById("result");
+const statusEl = document.getElementById("status");
+
+let names = [];
+let currentRotation = 0;
+let spinning = false;
+
+const colors = [
+  "#2563eb","#dc2626","#16a34a","#f59e0b","#7c3aed",
+  "#0891b2","#db2777","#65a30d","#ea580c","#4f46e5"
+];
+
+function cleanName(raw){
+  return raw.trim().replace(/,+$/,"").trim();
+}
+
+function readNames(){
+  const lines = namesInput.value.split(/\r?\n/);
+  names = lines
+    .map(line => ({
+      text: cleanName(line),
+      priority: /,\s*$/.test(line)
+    }))
+    .filter(x => x.text !== "");
+
+  // Hanya satu nama yang boleh menjadi prioritas.
+  const priorityIndex = names.findIndex(x => x.priority);
+  if(priorityIndex !== -1){
+    names = names.map((item,i)=>({...item, priority:i===priorityIndex}));
+  }
+
+  drawWheel();
+  statusEl.textContent = names.length
+    ? `${names.length} nama tersedia.`
+    : "Belum ada nama.";
+}
+
+function drawWheel(){
+  const n = names.length;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const cx = canvas.width/2;
+  const cy = canvas.height/2;
+  const radius = 320;
+
+  if(n === 0){
+    ctx.beginPath();
+    ctx.arc(cx,cy,radius,0,Math.PI*2);
+    ctx.fillStyle="#e5e7eb";
+    ctx.fill();
+    ctx.fillStyle="#64748b";
+    ctx.font="bold 28px Arial";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText("Masukkan nama",cx,cy);
+    return;
+  }
+
+  const arc = Math.PI*2/n;
+
+  for(let i=0;i<n;i++){
+    const start = -Math.PI/2 + i*arc;
+    const end = start + arc;
+
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,radius,start,end);
+    ctx.closePath();
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.fill();
+    ctx.strokeStyle="#fff";
+    ctx.lineWidth=3;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start+arc/2);
+
+    let fontSize = Math.max(13, Math.min(25, 280/n));
+    ctx.font=`bold ${fontSize}px Arial`;
+    ctx.fillStyle="#fff";
+    ctx.textAlign="right";
+    ctx.textBaseline="middle";
+    ctx.shadowColor="rgba(0,0,0,.25)";
+    ctx.shadowBlur=3;
+
+    let label = names[i].text;
+    const maxChars = Math.max(8, Math.floor(34/n*10));
+    if(label.length > maxChars) label = label.slice(0,maxChars-1)+"…";
+
+    ctx.fillText(label,radius-24,0);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius,0,Math.PI*2);
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=8;
+  ctx.stroke();
+}
+
+function randomIndex(){
+  return Math.floor(Math.random()*names.length);
+}
+
+function priorityIndex(){
+  return names.findIndex(x => x.priority);
+}
+
+function spin(){
+  if(spinning || names.length < 1) return;
+
+  spinning = true;
+  spinBtn.disabled = true;
+  updateBtn.disabled = true;
+  result.textContent = "Memutar...";
+
+  const targetIndex = priorityIndex() !== -1 ? priorityIndex() : randomIndex();
+  const n = names.length;
+  const arc = 360/n;
+
+  // Posisi pusat segmen target terhadap pointer di atas.
+  const targetCenterDeg = targetIndex*arc + arc/2;
+  const desiredRotation = 360 - targetCenterDeg;
+
+  // Tambahkan 6-9 putaran penuh agar animasi terasa seperti spin wheel.
+  const extraTurns = 6 + Math.floor(Math.random()*4);
+  const normalizedCurrent = currentRotation % 360;
+  let delta = desiredRotation - normalizedCurrent;
+  if(delta < 0) delta += 360;
+  delta += extraTurns*360;
+
+  const startRotation = currentRotation;
+  const endRotation = currentRotation + delta;
+  const duration = 4800;
+
+  const startTime = performance.now();
+
+  function animate(now){
+    const t = Math.min(1,(now-startTime)/duration);
+    const eased = 1-Math.pow(1-t,4);
+    currentRotation = startRotation + (endRotation-startRotation)*eased;
+
+    canvas.style.transform=`rotate(${currentRotation}deg)`;
+
+    if(t < 1){
+      requestAnimationFrame(animate);
+    }else{
+      spinning = false;
+      spinBtn.disabled = false;
+      updateBtn.disabled = false;
+
+      const selected = names[targetIndex];
+      result.textContent = `🎉 ${selected.text}`;
+
+      // Prioritas otomatis hilang setelah terpilih.
+      if(selected.priority){
+        selected.priority = false;
+        namesInput.value = names.map(x => x.text).join("\n");
+        statusEl.textContent = `${selected.text} terpilih. Prioritasnya sudah dinonaktifkan.`;
+      }else{
+        statusEl.textContent = `${selected.text} terpilih secara acak.`;
+      }
+
+      drawWheel();
+      canvas.style.transform=`rotate(${currentRotation}deg)`;
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function resetAll(){
+  namesInput.value="";
+  names=[];
+  currentRotation=0;
+  canvas.style.transform="rotate(0deg)";
+  result.textContent="Siap untuk diputar!";
+  statusEl.textContent="";
+  drawWheel();
+}
+
+spinBtn.addEventListener("click",spin);
+updateBtn.addEventListener("click",readNames);
+resetBtn.addEventListener("click",resetAll);
+
+namesInput.addEventListener("input",()=>{
+  statusEl.textContent="";
+});
+
+readNames();
+</script>
 </body>
 </html>
